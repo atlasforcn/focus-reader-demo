@@ -28,16 +28,49 @@ export function getFileTypeLabel(file) {
   return file.type === "application/pdf" ? "PDF" : "TEXT";
 }
 
-export function validateFile(file) {
-  if (!file) return "請先選擇一個檔案。";
-  if (file.size === 0) return "這個檔案沒有內容。";
-  if (file.size > MAX_FILE_SIZE) return "檔案超過 20 MB，請選擇較小的檔案。";
-
+export function inspectFile(file) {
+  if (!file) return null;
   const extension = getFileExtension(file.name);
   const isPdf = extension === "pdf" || file.type === "application/pdf";
-  const isText = SUPPORTED_EXTENSIONS.has(extension) || file.type.startsWith("text/");
-  if (!isPdf && !isText) return "目前無法讀取這種格式，請改用 PDF 或純文字檔案。";
+  const isText = SUPPORTED_EXTENSIONS.has(extension) || (file.type || "").startsWith("text/");
+
+  return {
+    isPdf,
+    format: {
+      passed: isPdf || isText,
+      label: isPdf ? "PDF" : (extension || file.type || "未知格式").toUpperCase(),
+    },
+    size: {
+      passed: file.size > 0 && file.size <= MAX_FILE_SIZE,
+      label: formatFileSize(file.size),
+    },
+  };
+}
+
+export function validateFile(file) {
+  if (!file) return "請先選擇一個檔案。";
+  const inspection = inspectFile(file);
+  if (file.size === 0) return "這個檔案沒有內容。";
+  if (!inspection.size.passed) return "檔案超過 20 MB，請選擇較小的檔案。";
+  if (!inspection.format.passed) return "目前無法讀取這種格式，請改用 PDF 或純文字檔案。";
   return "";
+}
+
+export function explainFileReadError(error, file) {
+  const name = error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message : String(error || "");
+  const inspection = file ? inspectFile(file) : null;
+
+  if (/password/i.test(name) || /password/i.test(message)) {
+    return "這份 PDF 有密碼保護，請先解除密碼後再試一次。";
+  }
+  if (/invalidpdf|missingpdf|unexpectedresponse/i.test(name) || /invalid pdf|corrupt/i.test(message)) {
+    return "PDF 可能已損毀或不是有效的 PDF，請重新匯出檔案後再試一次。";
+  }
+  if (inspection?.isPdf && /worker|module|fetch/i.test(message)) {
+    return "PDF 讀取元件載入失敗，請重新整理頁面後再試一次。";
+  }
+  return message || "讀取檔案時發生問題，請重新選擇檔案。";
 }
 
 export function cleanTextFileContents(rawText, extension) {
@@ -122,6 +155,11 @@ export async function extractTextFromFile(file) {
   const text = isPdf
     ? await extractPdfText(await file.arrayBuffer())
     : cleanTextFileContents(await file.text(), extension);
+
+  const replacementCharacters = (text.match(/\uFFFD/g) || []).length;
+  if (!isPdf && replacementCharacters > Math.max(3, text.length * 0.02)) {
+    throw new Error("檔案的文字編碼無法正確辨識，請將檔案另存為 UTF-8 後再試一次。");
+  }
 
   if (!text) {
     const message = isPdf

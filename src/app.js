@@ -2,9 +2,11 @@ import { splitIntoSentences } from "./splitter.js";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   configurePdfWorker,
+  explainFileReadError,
   extractTextFromFile,
   formatFileSize,
   getFileTypeLabel,
+  inspectFile,
 } from "./file-parser.js";
 
 configurePdfWorker(pdfWorkerUrl);
@@ -20,8 +22,12 @@ const elements = {
   dropZone: document.querySelector("#drop-zone"),
   fileStatus: document.querySelector("#file-status"),
   fileType: document.querySelector("#file-type"),
+  fileStateTitle: document.querySelector("#file-state-title"),
   fileName: document.querySelector("#file-name"),
   fileDetail: document.querySelector("#file-detail"),
+  formatCheck: document.querySelector("#format-check"),
+  sizeCheck: document.querySelector("#size-check"),
+  contentCheck: document.querySelector("#content-check"),
   removeFile: document.querySelector("#remove-file"),
   stage: document.querySelector("#reading-stage"),
   list: document.querySelector("#sentence-list"),
@@ -86,19 +92,39 @@ function move(direction) {
   setActiveSentence(activeIndex + direction);
 }
 
-function showFileStatus(file, detail, isError = false) {
+function setFileCheck(element, state, label) {
+  element.className = state ? `is-${state}` : "";
+  element.querySelector("b").textContent = label;
+}
+
+function showFileStatus(file, { state, title, detail, text = "" }) {
+  const inspection = inspectFile(file);
   elements.fileStatus.hidden = false;
-  elements.fileStatus.classList.toggle("is-error", isError);
-  elements.fileStatus.setAttribute("role", isError ? "alert" : "status");
-  elements.fileType.textContent = isError ? "!" : getFileTypeLabel(file);
+  elements.fileStatus.className = `file-status is-${state}`;
+  elements.fileStatus.setAttribute("role", state === "error" ? "alert" : "status");
+  elements.fileType.textContent = state === "error" ? "!" : getFileTypeLabel(file);
+  elements.fileStateTitle.textContent = title;
   elements.fileName.textContent = file?.name || "無法匯入檔案";
   elements.fileDetail.textContent = detail;
+
+  setFileCheck(elements.formatCheck, inspection.format.passed ? "pass" : "fail", inspection.format.passed ? `支援・${inspection.format.label}` : `不支援・${inspection.format.label}`);
+  setFileCheck(elements.sizeCheck, inspection.size.passed ? "pass" : "fail", inspection.size.passed ? `通過・${inspection.size.label}` : `未通過・${inspection.size.label}`);
+
+  if (state === "loading" && inspection.format.passed && inspection.size.passed) {
+    setFileCheck(elements.contentCheck, "checking", "正在擷取文字");
+  } else if (state === "success") {
+    const sentenceCount = splitIntoSentences(text).length;
+    setFileCheck(elements.contentCheck, "pass", `${text.length.toLocaleString("zh-TW")} 字・${sentenceCount.toLocaleString("zh-TW")} 句`);
+  } else {
+    const didRun = inspection.format.passed && inspection.size.passed;
+    setFileCheck(elements.contentCheck, didRun ? "fail" : "skip", didRun ? "沒有取得文字" : "未執行");
+  }
 }
 
 function clearImportedFile({ clearText = true } = {}) {
   elements.fileInput.value = "";
   elements.fileStatus.hidden = true;
-  elements.fileStatus.classList.remove("is-error");
+  elements.fileStatus.className = "file-status";
   if (clearText) {
     elements.source.value = "";
     elements.source.dispatchEvent(new Event("input"));
@@ -109,20 +135,30 @@ async function importFile(file) {
   if (!file) return;
   elements.dropZone.classList.add("is-loading");
   elements.fileInput.disabled = true;
-  showFileStatus(file, "正在瀏覽器內讀取檔案……");
+  showFileStatus(file, {
+    state: "loading",
+    title: "正在檢查檔案……",
+    detail: "格式與大小通過後，會在瀏覽器內擷取文字。",
+  });
 
   try {
     const text = await extractTextFromFile(file);
     elements.source.value = text;
     elements.source.dispatchEvent(new Event("input"));
-    showFileStatus(
-      file,
-      `${formatFileSize(file.size)}・已擷取 ${text.length.toLocaleString("zh-TW")} 個字，可在下方繼續編輯`,
-    );
+    showFileStatus(file, {
+      state: "success",
+      title: "檔案讀取成功",
+      detail: `${formatFileSize(file.size)}・內容已放入下方文字區，可編輯後開始閱讀。`,
+      text,
+    });
     elements.source.focus();
   } catch (error) {
-    clearImportedFile({ clearText: false });
-    showFileStatus(file, error instanceof Error ? error.message : "讀取檔案時發生問題。", true);
+    elements.fileInput.value = "";
+    showFileStatus(file, {
+      state: "error",
+      title: "檔案讀取失敗",
+      detail: explainFileReadError(error, file),
+    });
   } finally {
     elements.dropZone.classList.remove("is-loading");
     elements.fileInput.disabled = false;

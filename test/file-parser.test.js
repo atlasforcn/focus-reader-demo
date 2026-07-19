@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import {
   MAX_FILE_SIZE,
   cleanTextFileContents,
+  explainFileReadError,
   extractPdfText,
   formatFileSize,
   getFileExtension,
+  inspectFile,
   joinPdfTextItems,
   validateFile,
 } from "../src/file-parser.js";
@@ -15,6 +17,19 @@ test("recognizes supported text files and rejects unsafe inputs", () => {
   assert.equal(validateFile({ name: "data.yaml", type: "", size: 120 }), "");
   assert.match(validateFile({ name: "photo.png", type: "image/png", size: 120 }), /無法讀取/);
   assert.match(validateFile({ name: "huge.txt", type: "text/plain", size: MAX_FILE_SIZE + 1 }), /20 MB/);
+});
+
+test("reports independent format and size checks", () => {
+  const inspection = inspectFile({ name: "book.pdf", type: "application/pdf", size: 2048 });
+  assert.deepEqual(inspection.format, { passed: true, label: "PDF" });
+  assert.deepEqual(inspection.size, { passed: true, label: "2.0 KB" });
+});
+
+test("turns common PDF failures into actionable messages", () => {
+  const file = { name: "locked.pdf", type: "application/pdf", size: 2048 };
+  const error = new Error("Password required");
+  error.name = "PasswordException";
+  assert.match(explainFileReadError(error, file), /密碼保護/);
 });
 
 test("normalizes text, JSON, and subtitle files", () => {

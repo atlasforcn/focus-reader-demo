@@ -27,6 +27,12 @@
 - 支援清楚的鍵盤焦點、語意標籤、螢幕閱讀器狀態播報與「減少動態效果」偏好。
 - 文字與檔案只在瀏覽器本機處理；不會上傳、儲存或保留，關閉頁面後即消失。
 
+### 檔案檢測
+
+- 選擇檔案後會依序檢查格式、20 MB 容量限制與文字內容擷取。
+- 成功時顯示檔案格式、大小、擷取字數與預估句數。
+- 失敗時會區分不支援格式、容量超限、PDF 無文字層、PDF 密碼保護、損毀檔案與文字編碼問題。
+
 ## 本機執行
 
 ```bash
@@ -41,8 +47,14 @@ npm test
 npm run build
 ```
 
+發布後可執行線上煙霧檢查，確認主頁載入正式建置結果，且 JavaScript、CSS、PDF worker 與隱私文案皆可取得：
+
+```bash
+npm run verify:deploy
+```
+
 ## 技術
 
 Vite + 原生 HTML、CSS、JavaScript，無後端、無資料庫。
 
-本專案可直接以 GitHub Pages 的「Deploy from a branch」模式發布，來源目錄設為儲存庫根目錄即可。
+本專案以 GitHub Pages 的「Deploy from a branch」模式發布，來源目錄必須設為 `/docs`。`npm run build` 會產生可直接部署的 `docs/` 內容。
