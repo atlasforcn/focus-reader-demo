@@ -11,6 +11,12 @@ export function configurePdfWorker(url) {
   pdfWorkerUrl = url;
 }
 
+export function createFileReadError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
 export function getFileExtension(fileName = "") {
   const parts = fileName.toLowerCase().split(".");
   return parts.length > 1 ? parts.pop() : "";
@@ -123,7 +129,7 @@ export function joinPdfTextItems(items) {
   return result.replace(/[ \t]+\n/g, "\n").trim();
 }
 
-export async function extractPdfText(arrayBuffer, getDocumentOverride) {
+export async function openPdfDocument(arrayBuffer, getDocumentOverride) {
   let getDocument = getDocumentOverride;
 
   if (!getDocument) {
@@ -133,17 +139,26 @@ export async function extractPdfText(arrayBuffer, getDocumentOverride) {
   }
 
   const loadingTask = getDocument({ data: new Uint8Array(arrayBuffer) });
-  const pdf = await loadingTask.promise;
+  return loadingTask.promise;
+}
+
+export async function extractPdfText(arrayBuffer, getDocumentOverride) {
+  const pdf = await openPdfDocument(arrayBuffer, getDocumentOverride);
   const pages = [];
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-    const pageText = joinPdfTextItems(textContent.items);
-    if (pageText) pages.push(pageText);
-  }
+  try {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = joinPdfTextItems(textContent.items);
+      if (pageText) pages.push(pageText);
+      page.cleanup?.();
+    }
 
-  return pages.join("\n").trim();
+    return pages.join("\n").trim();
+  } finally {
+    await pdf.destroy?.();
+  }
 }
 
 export async function extractTextFromFile(file) {
@@ -163,9 +178,9 @@ export async function extractTextFromFile(file) {
 
   if (!text) {
     const message = isPdf
-      ? "沒有在 PDF 中找到可讀取的文字。若這是掃描文件，目前尚未支援 OCR。"
+      ? "PDF 沒有可讀取的文字層，準備啟動 OCR。"
       : "沒有在檔案中找到可閱讀的文字。";
-    throw new Error(message);
+    throw createFileReadError(isPdf ? "PDF_NO_TEXT" : "TEXT_NO_CONTENT", message);
   }
 
   return text;

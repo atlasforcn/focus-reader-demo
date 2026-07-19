@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   MAX_FILE_SIZE,
   cleanTextFileContents,
+  createFileReadError,
   explainFileReadError,
   extractPdfText,
   formatFileSize,
@@ -32,6 +33,11 @@ test("turns common PDF failures into actionable messages", () => {
   assert.match(explainFileReadError(error, file), /密碼保護/);
 });
 
+test("labels image-only PDFs so the interface can start OCR", () => {
+  const error = createFileReadError("PDF_NO_TEXT", "沒有文字");
+  assert.equal(error.code, "PDF_NO_TEXT");
+});
+
 test("normalizes text, JSON, and subtitle files", () => {
   assert.equal(cleanTextFileContents("\uFEFF第一行\r\n第二行", "txt"), "第一行\n第二行");
   assert.equal(cleanTextFileContents('{"title":"逐句"}', "json"), '{\n  "title": "逐句"\n}');
@@ -53,14 +59,20 @@ test("extracts and separates text from multiple PDF pages", async () => {
     [{ str: "第一頁。", hasEOL: false }],
     [{ str: "第二頁。", hasEOL: false }],
   ];
+  let destroyed = false;
   const mockGetDocument = () => ({
     promise: Promise.resolve({
       numPages: pages.length,
-      getPage: async (pageNumber) => ({ getTextContent: async () => ({ items: pages[pageNumber - 1] }) }),
+      getPage: async (pageNumber) => ({
+        getTextContent: async () => ({ items: pages[pageNumber - 1] }),
+        cleanup: () => {},
+      }),
+      destroy: async () => { destroyed = true; },
     }),
   });
 
   assert.equal(await extractPdfText(new ArrayBuffer(4), mockGetDocument), "第一頁。\n第二頁。");
+  assert.equal(destroyed, true);
 });
 
 test("extracts text through the real PDF engine", async () => {
