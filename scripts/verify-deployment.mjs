@@ -15,6 +15,9 @@ if (html.includes("./src/app.js") || html.includes("/src/app.js")) {
 if (!html.includes("不會上傳、儲存或保留")) {
   throw new Error("主頁缺少零資料留存承諾。");
 }
+if (html.includes("ocr-progress") || html.includes("自動啟用本機 OCR")) {
+  throw new Error("主頁仍殘留 OCR 介面。");
+}
 
 const scriptPath = html.match(/<script[^>]+src="([^"]+\.js)"/)?.[1];
 const stylePath = html.match(/<link[^>]+href="([^"]+\.css)"/)?.[1];
@@ -26,6 +29,9 @@ const [script] = await Promise.all([
   get(scriptUrl, "JavaScript"),
   get(styleUrl, "CSS"),
 ]);
+if (/tesseract|chi_sim|createWorker/.test(script)) {
+  throw new Error("正式版仍殘留 OCR 執行程式。");
+}
 
 const workerPath = script.match(/["'](pdf\.worker\.min-[A-Za-z0-9_-]+\.mjs)["']/)?.[1];
 if (!workerPath) throw new Error("正式版中找不到 PDF 讀取元件。");
@@ -34,4 +40,5 @@ await get(new URL(workerPath, scriptUrl), "PDF 讀取元件");
 console.log("✓ 主頁載入正式建置結果");
 console.log("✓ JavaScript 與 CSS 可正常取得");
 console.log("✓ PDF 讀取元件可正常取得");
+console.log("✓ OCR 介面與執行程式已移除");
 console.log("✓ 首頁包含零資料留存承諾");
