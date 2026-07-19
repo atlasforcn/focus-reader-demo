@@ -16,7 +16,7 @@ test("recognizes supported text files and rejects unsafe inputs", () => {
   assert.equal(validateFile({ name: "notes.md", type: "text/markdown", size: 120 }), "");
   assert.equal(validateFile({ name: "data.yaml", type: "", size: 120 }), "");
   assert.match(validateFile({ name: "photo.png", type: "image/png", size: 120 }), /無法讀取/);
-  assert.match(validateFile({ name: "huge.txt", type: "text/plain", size: MAX_FILE_SIZE + 1 }), /20 MB/);
+  assert.match(validateFile({ name: "huge.txt", type: "text/plain", size: MAX_FILE_SIZE + 1 }), /40 MB/);
 });
 
 test("reports independent format and size checks", () => {

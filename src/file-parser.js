@@ -1,4 +1,4 @@
-export const MAX_FILE_SIZE = 20 * 1024 * 1024;
+export const MAX_FILE_SIZE = 40 * 1024 * 1024;
 
 const SUPPORTED_EXTENSIONS = new Set([
   "pdf", "txt", "md", "markdown", "csv", "tsv", "json", "html", "htm",
@@ -51,7 +51,7 @@ export function validateFile(file) {
   if (!file) return "請先選擇一個檔案。";
   const inspection = inspectFile(file);
   if (file.size === 0) return "這個檔案沒有內容。";
-  if (!inspection.size.passed) return "檔案超過 20 MB，請選擇較小的檔案。";
+  if (!inspection.size.passed) return "檔案超過 40 MB，請選擇較小的檔案。";
   if (!inspection.format.passed) return "目前無法讀取這種格式，請改用 PDF 或純文字檔案。";
   return "";
 }
