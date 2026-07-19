@@ -33,9 +33,10 @@ test("turns common PDF failures into actionable messages", () => {
   assert.match(explainFileReadError(error, file), /密碼保護/);
 });
 
-test("labels image-only PDFs so the interface can start OCR", () => {
-  const error = createFileReadError("PDF_NO_TEXT", "沒有文字");
+test("labels image-only PDFs so the interface can reject OCR-dependent files", () => {
+  const error = createFileReadError("PDF_NO_TEXT", "掃描型 PDF 目前不支援 OCR");
   assert.equal(error.code, "PDF_NO_TEXT");
+  assert.match(error.message, /不支援 OCR/);
 });
 
 test("normalizes text, JSON, and subtitle files", () => {

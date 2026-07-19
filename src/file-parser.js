@@ -178,7 +178,7 @@ export async function extractTextFromFile(file) {
 
   if (!text) {
     const message = isPdf
-      ? "PDF 沒有可讀取的文字層，準備啟動 OCR。"
+      ? "這是掃描圖片型 PDF，沒有可讀取的文字層；目前不支援 OCR，請改用含可選取文字的 PDF。"
       : "沒有在檔案中找到可閱讀的文字。";
     throw createFileReadError(isPdf ? "PDF_NO_TEXT" : "TEXT_NO_CONTENT", message);
   }
