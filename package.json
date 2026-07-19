@@ -1,0 +1,19 @@
+{
+  "name": "focus-reader-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test",
+    "preview": "vite preview",
+    "verify:deploy": "node scripts/verify-deployment.mjs"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.7.284"
+  }
+}

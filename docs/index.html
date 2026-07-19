@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="把長文字拆成一句一行，使用閱讀尺協助專注的無障礙閱讀工具。" />
+    <meta name="theme-color" content="#f4efe5" />
+    <title>逐句｜專注閱讀工具</title>
+    <link rel="icon" href="./assets/favicon-CqQjC_ss.svg" type="image/svg+xml" />
+    <script type="module" crossorigin src="./assets/index-DSbCJzPP.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D25XhjqC.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#reader">跳到閱讀區</a>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="逐句首頁">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>逐句</span>
+      </a>
+      <p class="local-badge"><span aria-hidden="true">●</span> 本機處理・零留存</p>
+    </header>
+
+    <main id="top">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow">FOCUS READER · 專注閱讀</p>
+          <h1 id="page-title">把一大段文字，<br /><em>變成讀得下去的節奏。</em></h1>
+          <p class="lede">貼上文字或匯入檔案，系統會依句號、問號、驚嘆號與換行自動分句。用鍵盤或滑鼠，讓閱讀尺陪你逐句前進。</p>
+        </div>
+        <div class="how-to" aria-label="三步驟使用說明">
+          <span>01 貼上或匯入</span>
+          <span>02 自動分句</span>
+          <span>03 逐句閱讀</span>
+        </div>
+      </section>
+
+      <aside class="privacy-promise" aria-labelledby="privacy-title">
+        <div class="privacy-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3 4.8 6v5.2c0 4.5 2.9 8.6 7.2 9.8 4.3-1.2 7.2-5.3 7.2-9.8V6L12 3Z"/><path d="m8.8 12 2.1 2.1 4.5-4.5"/></svg>
+        </div>
+        <div>
+          <p class="step-label">PRIVACY PROMISE</p>
+          <h2 id="privacy-title">你的文字，不離開這台裝置。</h2>
+        </div>
+        <p>我們不會上傳、儲存或保留你貼上及匯入的任何內容。所有解析與分句都只在瀏覽器內完成，關閉頁面後即消失。</p>
+      </aside>
+
+      <section class="workspace" aria-label="專注閱讀工作區">
+        <form class="input-panel" id="text-form">
+          <div class="panel-heading">
+            <div>
+              <p class="step-label">STEP 01</p>
+              <h2>貼上文字，或匯入檔案</h2>
+            </div>
+            <button class="text-button" type="button" id="sample-button">填入範例</button>
+          </div>
+
+          <div class="file-import" id="drop-zone">
+            <input class="file-input visually-hidden" id="file-input" type="file" accept=".pdf,.txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.yaml,.yml,.srt,.vtt,.log,application/pdf,text/plain,text/markdown,text/csv,application/json,text/html,application/xml,application/x-yaml" aria-describedby="file-formats upload-privacy" />
+            <label class="file-drop-label" for="file-input">
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14" /></svg>
+              </span>
+              <span><b>把檔案拖到這裡</b><small>或點一下選擇檔案</small></span>
+              <span class="file-button" aria-hidden="true">選擇檔案</span>
+            </label>
+            <div class="file-status" id="file-status" aria-live="polite" hidden>
+              <span class="file-type" id="file-type" aria-hidden="true">TXT</span>
+              <span class="file-summary">
+                <b class="file-state-title" id="file-state-title">正在檢查檔案</b>
+                <span id="file-name"></span>
+                <small id="file-detail"></small>
+              </span>
+              <button type="button" id="remove-file" aria-label="移除已匯入的檔案">移除</button>
+              <ul class="file-checks" id="file-checks" aria-label="檔案檢測結果">
+                <li id="format-check"><i aria-hidden="true"></i><span>檔案格式</span><b>等待檢查</b></li>
+                <li id="size-check"><i aria-hidden="true"></i><span>檔案大小</span><b>等待檢查</b></li>
+                <li id="content-check"><i aria-hidden="true"></i><span>文字內容</span><b>等待檢查</b></li>
+              </ul>
+            </div>
+            <p class="file-formats" id="file-formats">支援含文字層的 PDF，以及 TXT、Markdown、CSV／TSV、JSON、HTML、XML、YAML、SRT、VTT、LOG，單檔上限 40 MB。掃描圖片型 PDF 不支援。</p>
+            <p class="upload-privacy" id="upload-privacy"><span aria-hidden="true">●</span> 檔案只在你的瀏覽器內開啟，不會上傳，也不會保留。</p>
+          </div>
+
+          <div class="method-divider"><span>或直接貼上文字</span></div>
+          <label class="visually-hidden" for="source-text">要閱讀的文字</label>
+          <textarea id="source-text" rows="9" placeholder="在這裡貼上文章、講義或任何想慢慢閱讀的文字……" required></textarea>
+          <div class="input-footer">
+            <span id="character-count" aria-live="polite">0 個字</span>
+            <button class="primary-button" type="submit">
+              開始逐句閱讀
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
+        </form>
+
+        <section class="reader-panel" id="reader" aria-labelledby="reader-title">
+          <div class="reader-toolbar">
+            <div>
+              <p class="step-label">STEP 02</p>
+              <h2 id="reader-title">逐句閱讀</h2>
+            </div>
+            <div class="progress-wrap" aria-label="閱讀進度">
+              <span id="progress-text">1 / 4</span>
+              <div class="progress-track"><i id="progress-bar"></i></div>
+            </div>
+          </div>
+
+          <div class="reading-options" aria-label="閱讀顯示設定">
+            <fieldset>
+              <legend>閱讀標記</legend>
+              <div class="segmented-control">
+                <label><input type="radio" name="marker" value="highlight" checked /><span>高亮</span></label>
+                <label><input type="radio" name="marker" value="underline" /><span>底線</span></label>
+                <label><input type="radio" name="marker" value="bullet" /><span>圓點</span></label>
+              </div>
+            </fieldset>
+
+            <label class="toggle-control">
+              <span><b>模糊其他句</b><small>降低視覺干擾</small></span>
+              <input id="blur-toggle" type="checkbox" />
+              <i aria-hidden="true"></i>
+            </label>
+
+            <label class="size-control" for="font-size">
+              <span>字級</span>
+              <input id="font-size" type="range" min="20" max="36" value="26" />
+              <output id="font-size-output" for="font-size">26</output>
+            </label>
+          </div>
+
+          <div class="reading-stage marker-highlight" id="reading-stage" tabindex="0" aria-label="閱讀內容。按空白鍵或向下鍵閱讀下一句，按向上鍵返回上一句。">
+            <ol id="sentence-list"></ol>
+            <p class="empty-state" id="empty-state">貼上文字後，句子會整齊地出現在這裡。</p>
+          </div>
+
+          <div class="reader-footer">
+            <p class="key-help"><kbd>Space</kbd> 或 <kbd>↓</kbd> 下一句　<kbd>↑</kbd> 上一句　<span>也可以直接點選句子</span></p>
+            <div class="reader-actions">
+              <button type="button" class="icon-button" id="previous-button" aria-label="上一句">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+              </button>
+              <button type="button" class="next-button" id="next-button">下一句 <span aria-hidden="true">↓</span></button>
+            </div>
+          </div>
+          <p class="visually-hidden" id="reader-status" aria-live="polite"></p>
+        </section>
+      </section>
+    </main>
+
+    <footer><p><b>零資料留存：</b>我們不會上傳、儲存或保留任何文字與檔案。</p><p>為更自在的閱讀而設計。</p></footer>
+
+    <noscript><p class="noscript-notice">這個工具需要啟用 JavaScript 才能讀取檔案與逐句閱讀。</p></noscript>
+  </body>
+</html>
